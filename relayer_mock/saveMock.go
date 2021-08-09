@@ -17,12 +17,12 @@ import (
 func saveMock(ctx *cli.Context) error {
 	debugInfo := debugInfo{}
 	debugInfo.relayerData = []*relayerInfo{
-		//&relayerInfo{url: keystore1},
+		&relayerInfo{url: keystore1},
 		//{url: keystore2},
 		//{url: keystore3},
 		//{url: keystore4},
 		//{url: keystore5},
-		&relayerInfo{url: keystore6},
+		//&relayerInfo{url: keystore6},
 	}
 	debugInfo.preWork(ctx, true)
 	debugInfo.saveForkBlock(ctx) //change this
@@ -185,47 +185,88 @@ func (d *debugInfo) saveForkBlock(ctx *cli.Context) {
 				// a1 -> ...a10  want Success
 				d.doSave(A[:10])
 				d.queryDebuginfo(CHAINTYPE_HEIGHT)
-				fmt.Println(" want Success and is a  Canonical ", A[9].Number, A[9].Hash())
+				fmt.Println("1. want Success and is a  Canonical ", A[9].Number, A[9].Hash())
 
 				// b5->   ...b10 want Failed
 				d.doSave(B[1:7])
 				d.queryDebuginfo(CHAINTYPE_HEIGHT)
-				fmt.Println("want Failed")
+				fmt.Println("2.want Failed")
 
 				// b4->   ...b10 want Success but not a  Canonical
 				d.doSave(B[0:7])
 				d.queryDebuginfo(CHAINTYPE_HEIGHT)
-				fmt.Println("want Success but not a  Canonical", B[6].Number, B[6].Hash())
+				fmt.Println("3.want Success but not a  Canonical", B[6].Number, B[6].Hash())
 
 				// b4->   ...b11 want Success  is a  Canonical
 				d.doSave(B[0:8])
 				d.queryDebuginfo(CHAINTYPE_HEIGHT)
-				fmt.Println("want Success  is a  Canonical: ", B[7].Number, B[7].Hash())
+				fmt.Println("4.want Success  is a  Canonical: ", B[7].Number, B[7].Hash())
 
 				// a11 -> ...a15 want Success
 				d.doSave(A[10:15])
 				d.queryDebuginfo(CHAINTYPE_HEIGHT)
-				fmt.Println("want Success is a Canonical", A[14].Number, A[14].Hash())
+				fmt.Println("5.want Success is a Canonical", A[14].Number, A[14].Hash())
 
 				// a11 -> ...a10  want Success but not a  Canonical
 				d.doSave(A[:10])
 				d.queryDebuginfo(CHAINTYPE_HEIGHT)
-				fmt.Println("want Success but not a  Canonical", B[9].Number, B[9].Hash())
+				fmt.Println("6.want Success but not a  Canonical", B[9].Number, B[9].Hash())
 
 				// B11 -> ...B15 want Success  is a  Canonical
 				d.doSave(B[8:12])
 				d.queryDebuginfo(CHAINTYPE_HEIGHT)
-				fmt.Println("want Success  is a  Canonical", B[11].Number, B[11].Hash())
+				fmt.Println("7.want Success  is a  Canonical", B[11].Number, B[11].Hash(), "  parenthash:  ", B[8].ParentHash)
 
 				// a0 -> ...a16  want Success is a  Canonical
 				d.doSave(A[:16])
 				d.queryDebuginfo(CHAINTYPE_HEIGHT)
-				fmt.Println("want Success is a  Canonical", B[15].Number, B[15].Hash())
+				fmt.Println("8.want Success is a  Canonical", B[15].Number, B[15].Hash())
 
 				// a16 -> ...a20  want Success is a  Canonical
 				d.doSave(A[16:20])
 				d.queryDebuginfo(CHAINTYPE_HEIGHT)
-				fmt.Println("want Success is a  Canonical", B[15].Number, B[15].Hash())
+				fmt.Println("9.want Success is a  Canonical", B[19].Number, B[19].Hash())
+
+				d.atlasBackendCh <- NEXT_STEP
+				return
+			default:
+				fmt.Println("over")
+			}
+		}
+	}
+}
+func (d *debugInfo) saveForkBlock01(ctx *cli.Context) {
+	go d.atlasBackend()
+	A, B := getForkBlock()
+	//fmt.Println("fmt.Println(A[0].ParentHash)                        ", A[0].ParentHash)
+	for {
+		select {
+		case currentEpoch := <-d.notifyCh:
+			fmt.Println("CURRENT EPOCH ========>", currentEpoch)
+			currentEpoch1 := int(currentEpoch)
+			for i := 0; i < len(d.step); i++ {
+				if d.step[i] == currentEpoch1 {
+					currentEpoch1 = i + 1
+					break
+				}
+			}
+			switch currentEpoch1 {
+			case 1:
+
+				// a11 -> ...a15 want Success
+				d.doSave(A[0:15])
+				d.queryDebuginfo(CHAINTYPE_HEIGHT)
+				fmt.Println("1.want Success is a Canonical", A[14].Number, A[14].Hash())
+
+				// b4->   ...b11 want Success  is a  Canonical
+				d.doSave(B[0:8])
+				d.queryDebuginfo(CHAINTYPE_HEIGHT)
+				fmt.Println("2.want Success  not a  Canonical: ", B[7].Number, B[7].Hash())
+
+				// B11 -> ...B15 want Success  is a  Canonical
+				d.doSave(B[8:12])
+				d.queryDebuginfo(CHAINTYPE_HEIGHT)
+				fmt.Println("3.want Success  is a  Canonical", B[11].Number, B[11].Hash(), "  parenthash:  ", B[8].ParentHash)
 
 				d.atlasBackendCh <- NEXT_STEP
 				return
