@@ -9,8 +9,17 @@ import (
 
 func appendMock(ctx *cli.Context) error {
 	debugInfo := debugInfo{}
-	debugInfo.preWork(ctx, true)
+	debugInfo.relayerData = []*relayerInfo{
+		&relayerInfo{url: keystore1},
+		//{url: keystore2},
+		//{url: keystore3},
+		//{url: keystore4},
+		//{url: keystore5},
+		//&relayerInfo{url: keystore6},
+	}
+	debugInfo.preWork(ctx, false)
 	debugInfo.appendMock(ctx) //change this
+
 	return nil
 }
 
@@ -49,7 +58,7 @@ func (d *debugInfo) appendMock(ctx *cli.Context) {
 				d.queryDebuginfo(QUERY_RELAYERINFO)
 				d.queryDebuginfo(BALANCE)
 				d.queryDebuginfo(REGISTER_BALANCE)
-				d.doAppend()
+				//d.doAppend()
 				d.atlasBackendCh <- NEXT_STEP
 			case 3:
 				d.queryDebuginfo(QUERY_RELAYERINFO)
@@ -64,8 +73,46 @@ func (d *debugInfo) appendMock(ctx *cli.Context) {
 	}
 }
 
+//Contract exec failed Invalid register account
+func (d *debugInfo) appendNoRegister(ctx *cli.Context) {
+	go d.atlasBackend()
+	for {
+		select {
+		case currentEpoch := <-d.notifyCh:
+			fmt.Println("CURRENT EPOCH ========>", currentEpoch)
+			currentEpoch1 := int(currentEpoch)
+			for i := 0; i < len(d.step); i++ {
+				if d.step[i] == currentEpoch1 {
+					currentEpoch1 = i + 1
+					break
+				}
+			}
+			switch currentEpoch1 {
+			case 1:
+				d.queryDebuginfo(QUERY_RELAYERINFO)
+				d.queryDebuginfo(BALANCE)
+				d.queryDebuginfo(REGISTER_BALANCE)
+				d.changeAllRegisterValue(100)
+				d.doAppend()
+				d.queryDebuginfo(QUERY_RELAYERINFO)
+				d.queryDebuginfo(BALANCE)
+				d.queryDebuginfo(REGISTER_BALANCE)
+				d.changeAllRegisterValue(100)
+				d.doAppend()
+				d.queryDebuginfo(QUERY_RELAYERINFO)
+				d.queryDebuginfo(BALANCE)
+				d.queryDebuginfo(REGISTER_BALANCE)
+				d.changeAllRegisterValue(100)
+				d.doAppend()
+				return
+			default:
+				fmt.Println("over")
+			}
+		}
+	}
+}
 func (d *debugInfo) doAppend() {
-	fmt.Println("=================DO Withdraw========================")
+	fmt.Println("=================DO Append========================")
 	conn := d.client
 	for k, _ := range d.relayerData {
 		fmt.Println("ADDRESS:", d.relayerData[k].from)
@@ -78,7 +125,7 @@ func (r *relayerInfo) Append(conn *ethclient.Client) {
 	}
 	value := ethToWei(r.registerValue)
 
-	input := packInput("append", r.from, value)
+	input := packInput("append", value)
 
 	sendContractTransaction(conn, r.from, RelayerAddress, nil, r.priKey, input)
 }

@@ -45,11 +45,22 @@ func getForkBlock() ([]ethereum.Header, []ethereum.Header) {
 		Alloc:      chain.GenesisAlloc{},
 	}
 	block, _ := Commit(genesis1, db001)
-	//fmt.Println("123::::", block.Header().Hash())
-	// chain A: G->A1->A2...A128
+	//fmt.Println("1::::", block.Header().Hash())
+	// chain A: G->A1->A2->A3->A4...A100
 	chainA := makeHeaderChain(block.Header(), 0, 100, ethash.NewFaker(), db001, 10)
-	// chain A: G->A1->B2...B128
+
+	// chain B: G->A1->A2->A3->B4...B100
 	chainB := makeHeaderChain(chainA[2], 0, 100, ethash.NewFaker(), db001, 10)
+
+	fmt.Println(chainB[0].ParentHash, "==", chainA[3].ParentHash)
+	if chainB[0].ParentHash != chainA[3].ParentHash {
+		log.Error("chain b is not a fork 1 ")
+	}
+	fmt.Println(chainB[1].ParentHash, "!=", chainA[4].ParentHash)
+	if chainB[1].ParentHash == chainA[4].ParentHash {
+		log.Error("chain b is not a fork 2 ")
+	}
+
 	return getChains(chainA), getChains(chainB)
 }
 
@@ -135,13 +146,9 @@ func ToBlock(g *chain.Genesis, db ethdb.Database) *types.Block {
 		MixDigest:   genesis.MixDigest,
 		Nonce:       types.BlockNonce(genesis.Nonce),
 	}
-	fmt.Println("toGenesis block hash: ", head.Hash())
-	if g.GasLimit == 0 {
-		head.GasLimit = params.GenesisGasLimit
-	}
-	if g.Difficulty == nil {
-		head.Difficulty = params.GenesisDifficulty
-	}
+	//fmt.Println("Root ===========================>: ", root)
+	//fmt.Println("toGenesis block hash: ", head.Hash())
+
 	statedb.Commit(false)
 	statedb.Database().TrieDB().Commit(root, true, nil)
 	return types.NewBlock(head, nil, nil, nil, trie.NewStackTrie(nil))

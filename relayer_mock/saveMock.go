@@ -17,10 +17,12 @@ import (
 func saveMock(ctx *cli.Context) error {
 	debugInfo := debugInfo{}
 	debugInfo.relayerData = []*relayerInfo{
+		//&relayerInfo{url: keystore1},
 		//{url: keystore2},
 		//{url: keystore3},
 		//{url: keystore4},
 		//{url: keystore5},
+		&relayerInfo{url: keystore6},
 	}
 	debugInfo.preWork(ctx, true)
 	debugInfo.saveForkBlock(ctx) //change this
@@ -163,6 +165,7 @@ func (d *debugInfo) saveByDifferentAccounts(ctx *cli.Context) {
 func (d *debugInfo) saveForkBlock(ctx *cli.Context) {
 	go d.atlasBackend()
 	A, B := getForkBlock()
+	//fmt.Println("fmt.Println(A[0].ParentHash)                        ", A[0].ParentHash)
 	for {
 		select {
 		case currentEpoch := <-d.notifyCh:
@@ -176,33 +179,54 @@ func (d *debugInfo) saveForkBlock(ctx *cli.Context) {
 			}
 			switch currentEpoch1 {
 			case 1:
-				d.queryDebuginfo(CHAINTYPE_HEIGHT)
-				d.queryDebuginfo(QUERY_RELAYERINFO)
-				d.queryDebuginfo(BALANCE)
-				d.queryDebuginfo(REGISTER_BALANCE)
-				d.queryDebuginfo(REWARD)
+				//fmt.Println(B[0].Number)
+				//a1->a2->a3->a4->...an
+				//a1->a2->a3->b4->...bn
+				// a1 -> ...a10  want Success
 				d.doSave(A[:10])
 				d.queryDebuginfo(CHAINTYPE_HEIGHT)
-				d.queryDebuginfo(QUERY_RELAYERINFO)
-				d.queryDebuginfo(BALANCE)
-				d.queryDebuginfo(REGISTER_BALANCE)
-				d.queryDebuginfo(REWARD)
-				d.doSave(B[:8])
-				d.atlasBackendCh <- NEXT_STEP
-			case 2:
+				fmt.Println(" want Success and is a  Canonical ", A[9].Number, A[9].Hash())
+
+				// b5->   ...b10 want Failed
+				d.doSave(B[1:7])
 				d.queryDebuginfo(CHAINTYPE_HEIGHT)
-				d.queryDebuginfo(QUERY_RELAYERINFO)
-				d.queryDebuginfo(BALANCE)
-				d.queryDebuginfo(REGISTER_BALANCE)
-				d.queryDebuginfo(REWARD)
-				d.doSave(d.ethData[:10])
-				d.atlasBackendCh <- NEXT_STEP
-			case 3:
+				fmt.Println("want Failed")
+
+				// b4->   ...b10 want Success but not a  Canonical
+				d.doSave(B[0:7])
 				d.queryDebuginfo(CHAINTYPE_HEIGHT)
-				d.queryDebuginfo(QUERY_RELAYERINFO)
-				d.queryDebuginfo(BALANCE)
-				d.queryDebuginfo(REGISTER_BALANCE)
-				d.queryDebuginfo(REWARD)
+				fmt.Println("want Success but not a  Canonical", B[6].Number, B[6].Hash())
+
+				// b4->   ...b11 want Success  is a  Canonical
+				d.doSave(B[0:8])
+				d.queryDebuginfo(CHAINTYPE_HEIGHT)
+				fmt.Println("want Success  is a  Canonical: ", B[7].Number, B[7].Hash())
+
+				// a11 -> ...a15 want Success
+				d.doSave(A[10:15])
+				d.queryDebuginfo(CHAINTYPE_HEIGHT)
+				fmt.Println("want Success is a Canonical", A[14].Number, A[14].Hash())
+
+				// a11 -> ...a10  want Success but not a  Canonical
+				d.doSave(A[:10])
+				d.queryDebuginfo(CHAINTYPE_HEIGHT)
+				fmt.Println("want Success but not a  Canonical", B[9].Number, B[9].Hash())
+
+				// B11 -> ...B15 want Success  is a  Canonical
+				d.doSave(B[8:12])
+				d.queryDebuginfo(CHAINTYPE_HEIGHT)
+				fmt.Println("want Success  is a  Canonical", B[11].Number, B[11].Hash())
+
+				// a0 -> ...a16  want Success is a  Canonical
+				d.doSave(A[:16])
+				d.queryDebuginfo(CHAINTYPE_HEIGHT)
+				fmt.Println("want Success is a  Canonical", B[15].Number, B[15].Hash())
+
+				// a16 -> ...a20  want Success is a  Canonical
+				d.doSave(A[16:20])
+				d.queryDebuginfo(CHAINTYPE_HEIGHT)
+				fmt.Println("want Success is a  Canonical", B[15].Number, B[15].Hash())
+
 				d.atlasBackendCh <- NEXT_STEP
 				return
 			default:
@@ -213,7 +237,7 @@ func (d *debugInfo) saveForkBlock(ctx *cli.Context) {
 }
 
 //  getCurrent type chain number by abi
-func getCurrentNumberAbi(conn *ethclient.Client, chainType rawdb.ChainType, from common.Address) uint64 {
+func getCurrentNumberAbi(conn *ethclient.Client, chainType rawdb.ChainType, from common.Address) (uint64, string) {
 	header, err := conn.HeaderByNumber(context.Background(), nil)
 	if err != nil {
 		log.Fatal(err)
@@ -227,9 +251,9 @@ func getCurrentNumberAbi(conn *ethclient.Client, chainType rawdb.ChainType, from
 	method, _ := abiHeaderStore.Methods[CurNbrAndHash]
 	ret, err := method.Outputs.Unpack(output)
 	ret1 := ret[0].(*big.Int).Uint64()
-	//ret2 := common.BytesToHash(ret[1].([]byte))
-	//fmt.Println(ret2)
-	return ret1
+	ret2 := common.BytesToHash(ret[1].([]byte))
+	return ret1, ret2.String()
+
 }
 
 func packInputStore(abiMethod string, params ...interface{}) []byte {

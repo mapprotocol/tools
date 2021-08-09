@@ -36,6 +36,7 @@ var (
 	keystore3                         = "D:/BaiduNetdiskDownload/test015/atlas/data555/keystore/UTC--2021-07-11T06-35-36.635750800Z--70bf8d9de50713101992649a4f0d7fa505ebb334"
 	keystore4                         = "D:/BaiduNetdiskDownload/test015/atlas/data555/keystore/UTC--2021-07-19T11-51-51.704095400Z--4e0449459f73341f8e9339cb9e49dae3115ec80f"
 	keystore5                         = "D:/BaiduNetdiskDownload/test015/atlas/data555/keystore/UTC--2021-07-21T10-26-12.236878500Z--8becddb5fbe6f3d6b08450e2d33e48e63d6c4b29"
+	keystore6                         = "D:/BaiduNetdiskDownload/test015/atlas/data555/keystore/UTC--2021-08-08T07-06-17.823389800Z--4c179dd018ab2852bb3b76f4e3c26de797997601"
 	password                          = "123456"
 	abiRelayer, _                     = abi.JSON(strings.NewReader(params2.RelayerABIJSON))
 	abiHeaderStore, _                 = abi.JSON(strings.NewReader(params2.HeaderStoreABIJSON))
@@ -109,7 +110,6 @@ func (d *debugInfo) preWork(ctx *cli.Context, isRegister bool) {
 	}
 	currentEpoch := number / epochHeight
 	d.step = []int{int(currentEpoch + 1), int(currentEpoch + 2), int(currentEpoch + 3)}
-	d.relayerData = append(d.relayerData, &relayerInfo{url: keystore1})
 	for k, _ := range d.relayerData {
 		Ele := d.relayerData[k]
 		priKey, from := loadprivateCommon(Ele.url)
@@ -150,8 +150,8 @@ func (d *debugInfo) queryDebuginfo(ss string) {
 
 	case CHAINTYPE_HEIGHT:
 		for k, _ := range d.relayerData {
-			currentTypeHeight := getCurrentNumberAbi(conn, ChainTypeETH, d.relayerData[k].from)
-			fmt.Println("ADDRESS:", d.relayerData[k].from, " TYPE HEIGHT:", currentTypeHeight)
+			currentTypeHeight, hash := getCurrentNumberAbi(conn, ChainTypeETH, d.relayerData[k].from)
+			fmt.Println("ADDRESS:", d.relayerData[k].from, " TYPE HEIGHT:", currentTypeHeight, "  HASH:   ", hash)
 		}
 	}
 
