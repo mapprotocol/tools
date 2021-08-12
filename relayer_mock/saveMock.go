@@ -6,6 +6,8 @@ import (
 	"fmt"
 	ethchain "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/mapprotocol/atlas/chains/headers/ethereum"
 	"github.com/mapprotocol/atlas/cmd/ethclient"
 	"github.com/mapprotocol/atlas/core/rawdb"
@@ -25,11 +27,12 @@ func saveMock(ctx *cli.Context) error {
 		//&relayerInfo{url: keystore6},
 	}
 	debugInfo.preWork(ctx, true)
-	debugInfo.saveForkBlock(ctx) //change this
+	debugInfo.saveMock(ctx) //change this
 	return nil
 }
 
 func (d *debugInfo) saveMock(ctx *cli.Context) {
+
 	go d.atlasBackend()
 	for {
 		select {
@@ -49,7 +52,8 @@ func (d *debugInfo) saveMock(ctx *cli.Context) {
 				d.queryDebuginfo(BALANCE)
 				d.queryDebuginfo(REGISTER_BALANCE)
 				d.queryDebuginfo(REWARD)
-				d.doSave(d.ethData[:10])
+				d.doSave2(d.ethData2[:250])
+				d.queryDebuginfo(CHAINTYPE_HEIGHT)
 				d.atlasBackendCh <- NEXT_STEP
 			case 2:
 				d.queryDebuginfo(CHAINTYPE_HEIGHT)
@@ -77,6 +81,17 @@ func (d *debugInfo) saveMock(ctx *cli.Context) {
 func (d *debugInfo) doSave(chains []ethereum.Header) {
 	fmt.Println("=================DO SAVE========================")
 	marshal, _ := json.Marshal(chains)
+	fmt.Println("len---->", len(marshal))
+	conn := d.client
+	for k, _ := range d.relayerData {
+		fmt.Println("ADDRESS:", d.relayerData[k].from)
+		d.relayerData[k].realSave(conn, ChainTypeETH, marshal)
+	}
+}
+func (d *debugInfo) doSave2(chains []types.Header) {
+	fmt.Println("=================DO SAVE========================")
+	marshal, _ := rlp.EncodeToBytes(chains)
+	fmt.Println("len--doSave2-->", len(marshal), "Max:", "131,072")
 	conn := d.client
 	for k, _ := range d.relayerData {
 		fmt.Println("ADDRESS:", d.relayerData[k].from)

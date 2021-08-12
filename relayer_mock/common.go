@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	ethchain "github.com/ethereum/go-ethereum"
@@ -31,12 +32,12 @@ import (
 
 var (
 	epochHeight                       = params.NewEpochLength
-	keystore1                         = "D:/BaiduNetdiskDownload/test015/atlas/data555/keystore/UTC--2021-07-09T06-27-06.967129500Z--c971f9cec4310cf001ca55078b43a568aaa0366d"
-	keystore2                         = "D:/BaiduNetdiskDownload/test015/atlas/data555/keystore/UTC--2021-07-09T06-26-32.960000300Z--78c5285c42572677d3f9dcc27b9ac7b1ff49843c"
-	keystore3                         = "D:/BaiduNetdiskDownload/test015/atlas/data555/keystore/UTC--2021-07-11T06-35-36.635750800Z--70bf8d9de50713101992649a4f0d7fa505ebb334"
-	keystore4                         = "D:/BaiduNetdiskDownload/test015/atlas/data555/keystore/UTC--2021-07-19T11-51-51.704095400Z--4e0449459f73341f8e9339cb9e49dae3115ec80f"
-	keystore5                         = "D:/BaiduNetdiskDownload/test015/atlas/data555/keystore/UTC--2021-07-21T10-26-12.236878500Z--8becddb5fbe6f3d6b08450e2d33e48e63d6c4b29"
-	keystore6                         = "D:/BaiduNetdiskDownload/test015/atlas/data555/keystore/UTC--2021-08-08T07-06-17.823389800Z--4c179dd018ab2852bb3b76f4e3c26de797997601"
+	keystore1                         = "D:/BaiduNetdiskDownload/test015/atlas-fork/atlas/data555/keystore/UTC--2021-07-09T06-27-06.967129500Z--c971f9cec4310cf001ca55078b43a568aaa0366d"
+	keystore2                         = "D:/BaiduNetdiskDownload/test015/atlas-fork/atlas/data555/keystore/UTC--2021-07-09T06-26-32.960000300Z--78c5285c42572677d3f9dcc27b9ac7b1ff49843c"
+	keystore3                         = "D:/BaiduNetdiskDownload/test015/atlas-fork/atlas/data555/keystore/UTC--2021-07-11T06-35-36.635750800Z--70bf8d9de50713101992649a4f0d7fa505ebb334"
+	keystore4                         = "D:/BaiduNetdiskDownload/test015/atlas-fork/atlas/data555/keystore/UTC--2021-07-19T11-51-51.704095400Z--4e0449459f73341f8e9339cb9e49dae3115ec80f"
+	keystore5                         = "D:/BaiduNetdiskDownload/test015/atlas-fork/atlas/data555/keystore/UTC--2021-07-21T10-26-12.236878500Z--8becddb5fbe6f3d6b08450e2d33e48e63d6c4b29"
+	keystore6                         = "D:/BaiduNetdiskDownload/test015/atlas-fork/atlas/data555/keystore/UTC--2021-08-08T07-06-17.823389800Z--4c179dd018ab2852bb3b76f4e3c26de797997601"
 	password                          = "123456"
 	abiRelayer, _                     = abi.JSON(strings.NewReader(params2.RelayerABIJSON))
 	abiHeaderStore, _                 = abi.JSON(strings.NewReader(params2.HeaderStoreABIJSON))
@@ -52,11 +53,11 @@ const (
 	CHAINTYPE_HEIGHT  = "chainTypeHeight"
 	NEXT_STEP         = "next step"
 
-	AtlasRPCListenAddr = "localhost"
+	AtlasRPCListenAddr = "localhost" //119.8.165.158
 	AtlasRPCPortFlag   = 7445
 
-	EthRPCListenAddr = "localhost"
-	EthRPCPortFlag   = 8083
+	EthRPCListenAddr = "119.8.165.158"
+	EthRPCPortFlag   = 8545
 	ChainTypeETH     = chains.ChainTypeETH
 	ChainTypeMAP     = chains.ChainTypeMAP
 
@@ -70,6 +71,7 @@ type debugInfo struct {
 	notifyCh       chan uint64
 	step           step
 	ethData        []ethereum.Header
+	ethData2       []types.Header
 	client         *ethclient.Client
 	relayerData    []*relayerInfo
 }
@@ -103,7 +105,8 @@ func (d *debugInfo) preWork(ctx *cli.Context, isRegister bool) {
 	d.notifyCh = make(chan uint64)
 	d.client = conn
 
-	d.ethData = getEthChains()
+	//d.ethData = getEthChains()
+	d.ethData2 = getEthChains2()
 	number, err := conn.BlockNumber(context.Background())
 	if err != nil {
 		log.Fatal("get BlockNumber err ", err)
@@ -198,7 +201,7 @@ func (d *debugInfo) atlasBackend() {
 	}
 }
 func getEthChains() []ethereum.Header {
-	Db, err := rawdb.NewLevelDBDatabase("relayerMockStore", 128, 1024, "", false)
+	Db, err := rawdb.NewLevelDBDatabase("xxxxxx", 128, 1024, "", false)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -223,6 +226,32 @@ func getEthChains() []ethereum.Header {
 	}
 	return Headers
 }
+func getEthChains2() []types.Header {
+	Db, err := rawdb.NewLevelDBDatabase("xxxxxx", 128, 1024, "", false)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var key []byte
+	key = []byte("ETH_INFO2")
+	var c []types.Header
+	jsonbyte, err := Db.Get(key)
+	json.Unmarshal(jsonbyte, &c)
+	if len(c) == 1000 {
+		return c
+	}
+	Ethconn, _ := dialEthConn()
+	Headers := getChainsCommon_ethHeaders(Ethconn)
+
+	rlp, err := json.Marshal(Headers)
+	if err != nil {
+		log.Fatal("Failed to Marshal block body", "err", err)
+	}
+
+	if err := Db.Put(key, rlp); err != nil {
+		log.Fatal("Failed to store block body", "err", err)
+	}
+	return Headers
+}
 func getChainsCommon(conn *ethclient.Client) []ethereum.Header {
 	startNum := 1
 	endNum := 1000
@@ -234,6 +263,20 @@ func getChainsCommon(conn *ethclient.Client) []ethereum.Header {
 			log.Fatal(err)
 		}
 		convertChain(&Headers[i-1], &HeaderBytes[i-1], Header)
+	}
+	return Headers
+}
+
+func getChainsCommon_ethHeaders(conn *ethclient.Client) []types.Header {
+	startNum := 1
+	endNum := 1000
+	Headers := make([]types.Header, 1000)
+	for i := startNum; i <= endNum; i++ {
+		Header, err := conn.HeaderByNumber(context.Background(), big.NewInt(int64(i)))
+		if err != nil {
+			log.Fatal(err)
+		}
+		Headers[i-1] = *Header
 	}
 	return Headers
 }
@@ -370,14 +413,17 @@ func loadprivateCommon(keyfile string) (*ecdsa.PrivateKey, common.Address) {
 	if err != nil {
 		log.Fatal(fmt.Errorf("failed to read the keyfile at '%s': %v", keyfile, err))
 	}
-	password = "123456"
-	if keyfile == keystore2 {
-		password = ""
-	}
 	key, err := keystore.DecryptKey(keyjson, password)
 	if err != nil {
 		log.Fatal(fmt.Errorf("error decrypting key: %v", err))
 	}
 	priKey1 := key.PrivateKey
 	return priKey1, crypto.PubkeyToAddress(priKey1.PublicKey)
+}
+
+func getBase64(num int64) {
+	conn, _ := dialEthConn()
+	h, _ := conn.HeaderByNumber(context.Background(), big.NewInt(num))
+	encodedStr := hex.EncodeToString(h.Extra)
+	fmt.Println(encodedStr)
 }
