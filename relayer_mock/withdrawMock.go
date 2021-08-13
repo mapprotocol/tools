@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/mapprotocol/atlas/cmd/ethclient"
+	"github.com/mapprotocol/tool/ethclient"
 	"gopkg.in/urfave/cli.v1"
 	"log"
 	"math/big"

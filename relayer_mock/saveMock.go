@@ -9,8 +9,8 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/mapprotocol/atlas/chains/headers/ethereum"
-	"github.com/mapprotocol/atlas/cmd/ethclient"
 	"github.com/mapprotocol/atlas/core/rawdb"
+	"github.com/mapprotocol/tool/ethclient"
 	"gopkg.in/urfave/cli.v1"
 	"log"
 	"math/big"
@@ -52,7 +52,7 @@ func (d *debugInfo) saveMock(ctx *cli.Context) {
 				d.queryDebuginfo(BALANCE)
 				d.queryDebuginfo(REGISTER_BALANCE)
 				d.queryDebuginfo(REWARD)
-				d.doSave2(d.ethData2[:250])
+				d.doSave2(d.ethData2[:18])
 				d.queryDebuginfo(CHAINTYPE_HEIGHT)
 				d.atlasBackendCh <- NEXT_STEP
 			case 2:

@@ -14,13 +14,12 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/mapprotocol/atlas/chains"
 	"github.com/mapprotocol/atlas/chains/headers/ethereum"
-	"github.com/mapprotocol/atlas/cmd/ethclient"
 	"github.com/mapprotocol/atlas/core/rawdb"
 	"github.com/mapprotocol/atlas/core/vm"
 	"github.com/mapprotocol/atlas/params"
 	params2 "github.com/mapprotocol/atlas/params"
+	"github.com/mapprotocol/tool/ethclient"
 	"gopkg.in/urfave/cli.v1"
 	"io/ioutil"
 	"log"
@@ -53,13 +52,13 @@ const (
 	CHAINTYPE_HEIGHT  = "chainTypeHeight"
 	NEXT_STEP         = "next step"
 
-	AtlasRPCListenAddr = "localhost" //119.8.165.158
-	AtlasRPCPortFlag   = 7445
+	AtlasRPCListenAddr = "localhost" //map 119.8.165.158 //pist 3.35.104.123
+	AtlasRPCPortFlag   = 8082
 
 	EthRPCListenAddr = "119.8.165.158"
 	EthRPCPortFlag   = 8545
-	ChainTypeETH     = chains.ChainTypeETH
-	ChainTypeMAP     = chains.ChainTypeMAP
+	ChainTypeETH     = 10
+	ChainTypeMAP     = 211
 
 	// method name
 	CurNbrAndHash = vm.CurNbrAndHash

@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/mapprotocol/atlas/accounts/keystore"
-	"github.com/mapprotocol/atlas/cmd/ethclient"
+	"github.com/mapprotocol/tool/ethclient"
 	"gopkg.in/urfave/cli.v1"
 	"io/ioutil"
 	"log"
