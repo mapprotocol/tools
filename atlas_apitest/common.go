@@ -10,7 +10,7 @@ import (
 
 func BlockNumber() {
 	q := 0
-	all := 10000
+	all := 6000
 	startTime := time.Now().Unix()
 	var waitMutx sync.WaitGroup
 	waitMutx.Add(all)
@@ -36,7 +36,7 @@ func BlockNumber() {
 		return
 	}
 	endTime := time.Now().Unix()
-	fmt.Println("Success rate: ", num0*100, "%", "  err num:", q, "  timeduring:", endTime-startTime)
+	fmt.Println("Success rate: ", num0*100, "%", "  err num:", q, "  timeduring:", endTime-startTime, "s")
 	// 10000次 21次失败  成功率99.8%
 	// 5000次  8次失败   成功率99.8%
 	// 4800次  12次失败  成功率99.8%
@@ -80,5 +80,5 @@ func SuggestGasPrice() {
 		return
 	}
 	endTime := time.Now().Unix()
-	fmt.Println("Success rate: ", num0*100, "%", "  err num:", q, "  timeduring:", endTime-startTime)
+	fmt.Println("Success rate: ", num0*100, "%", "  err num:", q, "  timeduring:", endTime-startTime, "s")
 }
