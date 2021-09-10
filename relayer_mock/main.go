@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/mapprotocol/tool/ethclient"
+	"github.com/mapprotocol/tools/ethclient"
 	"gopkg.in/urfave/cli.v1"
 	"log"
 	"os"

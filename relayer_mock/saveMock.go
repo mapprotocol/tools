@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/mapprotocol/atlas/chains/headers/ethereum"
 	"github.com/mapprotocol/atlas/core/rawdb"
-	"github.com/mapprotocol/tool/ethclient"
+	"github.com/mapprotocol/tools/ethclient"
 	"gopkg.in/urfave/cli.v1"
 	"log"
 	"math/big"

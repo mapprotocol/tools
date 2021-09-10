@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"crypto/ecdsa"
+	"encoding/base64"
 	"encoding/binary"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	ethchain "github.com/ethereum/go-ethereum"
@@ -19,11 +19,10 @@ import (
 	"github.com/mapprotocol/atlas/core/vm"
 	"github.com/mapprotocol/atlas/params"
 	params2 "github.com/mapprotocol/atlas/params"
-	"github.com/mapprotocol/tool/ethclient"
+	"github.com/mapprotocol/tools/ethclient"
 	"gopkg.in/urfave/cli.v1"
 	"io/ioutil"
 	"log"
-	"math"
 	"math/big"
 	"strings"
 	"time"
@@ -31,13 +30,13 @@ import (
 
 var (
 	epochHeight                       = params.NewEpochLength
-	keystore1                         = "D:/BaiduNetdiskDownload/test015/atlas-fork/atlas/data555/keystore/UTC--2021-07-09T06-27-06.967129500Z--c971f9cec4310cf001ca55078b43a568aaa0366d"
+	keystore1                         = "D:/work/atlas_master/atlas/data/keystore/UTC--2021-07-19T02-04-57.993791200Z--df945e6ffd840ed5787d367708307bd1fa3d40f4"
 	keystore2                         = "D:/BaiduNetdiskDownload/test015/atlas-fork/atlas/data555/keystore/UTC--2021-07-09T06-26-32.960000300Z--78c5285c42572677d3f9dcc27b9ac7b1ff49843c"
 	keystore3                         = "D:/BaiduNetdiskDownload/test015/atlas-fork/atlas/data555/keystore/UTC--2021-07-11T06-35-36.635750800Z--70bf8d9de50713101992649a4f0d7fa505ebb334"
 	keystore4                         = "D:/BaiduNetdiskDownload/test015/atlas-fork/atlas/data555/keystore/UTC--2021-07-19T11-51-51.704095400Z--4e0449459f73341f8e9339cb9e49dae3115ec80f"
 	keystore5                         = "D:/BaiduNetdiskDownload/test015/atlas-fork/atlas/data555/keystore/UTC--2021-07-21T10-26-12.236878500Z--8becddb5fbe6f3d6b08450e2d33e48e63d6c4b29"
 	keystore6                         = "D:/BaiduNetdiskDownload/test015/atlas-fork/atlas/data555/keystore/UTC--2021-08-08T07-06-17.823389800Z--4c179dd018ab2852bb3b76f4e3c26de797997601"
-	password                          = "123456"
+	password                          = "111111"
 	abiRelayer, _                     = abi.JSON(strings.NewReader(params2.RelayerABIJSON))
 	abiHeaderStore, _                 = abi.JSON(strings.NewReader(params2.HeaderStoreABIJSON))
 	RelayerAddress     common.Address = params2.RelayerAddress
@@ -57,8 +56,10 @@ const (
 
 	EthRPCListenAddr = "119.8.165.158"
 	EthRPCPortFlag   = 8545
-	ChainTypeETH     = 10
-	ChainTypeMAP     = 211
+	EthUrl           = "https://ropsten.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161"
+
+	ChainTypeETH = 3
+	ChainTypeMAP = 211
 
 	// method name
 	CurNbrAndHash = vm.CurNbrAndHash
@@ -124,9 +125,9 @@ func (d *debugInfo) preWork(ctx *cli.Context, isRegister bool) {
 		bb := getBalance(conn, Ele.from)
 		Ele.preBalance = bb
 		Ele.nowBalance = bb
-		if isRegister {
-			register11(ctx, d.client, *d.relayerData[k])
-		}
+		//if isRegister {
+		//	register11(ctx, d.client, *d.relayerData[k])
+		//}
 	}
 
 }
@@ -226,29 +227,29 @@ func getEthChains() []ethereum.Header {
 	return Headers
 }
 func getEthChains2() []types.Header {
-	Db, err := rawdb.NewLevelDBDatabase("xxxxxx", 128, 1024, "", false)
-	if err != nil {
-		log.Fatal(err)
-	}
-	var key []byte
-	key = []byte("ETH_INFO2")
-	var c []types.Header
-	jsonbyte, err := Db.Get(key)
-	json.Unmarshal(jsonbyte, &c)
-	if len(c) == 1000 {
-		return c
-	}
+	//Db, err := rawdb.NewLevelDBDatabase("xxxxxx", 128, 1024, "", false)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//var key []byte
+	//key = []byte("ETH_INFO2")
+	//var c []types.Header
+	//jsonbyte, err := Db.Get(key)
+	//json.Unmarshal(jsonbyte, &c)
+	//if len(c) == 1000 {
+	//	return c
+	//}
 	Ethconn, _ := dialEthConn()
 	Headers := getChainsCommon_ethHeaders(Ethconn)
 
-	rlp, err := json.Marshal(Headers)
-	if err != nil {
-		log.Fatal("Failed to Marshal block body", "err", err)
-	}
+	//rlp, err := json.Marshal(Headers)
+	//if err != nil {
+	//	log.Fatal("Failed to Marshal block body", "err", err)
+	//}
 
-	if err := Db.Put(key, rlp); err != nil {
-		log.Fatal("Failed to store block body", "err", err)
-	}
+	//if err := Db.Put(key, rlp); err != nil {
+	//	log.Fatal("Failed to store block body", "err", err)
+	//}
 	return Headers
 }
 func getChainsCommon(conn *ethclient.Client) []ethereum.Header {
@@ -267,15 +268,17 @@ func getChainsCommon(conn *ethclient.Client) []ethereum.Header {
 }
 
 func getChainsCommon_ethHeaders(conn *ethclient.Client) []types.Header {
-	startNum := 1
-	endNum := 1000
-	Headers := make([]types.Header, 1000)
+	startNum := 10983101
+	endNum := 10983122
+	Headers := make([]types.Header, 22)
+	j := 0
 	for i := startNum; i <= endNum; i++ {
 		Header, err := conn.HeaderByNumber(context.Background(), big.NewInt(int64(i)))
 		if err != nil {
 			log.Fatal(err)
 		}
-		Headers[i-1] = *Header
+		Headers[j] = *Header
+		j++
 	}
 	return Headers
 }
@@ -301,14 +304,14 @@ func printChangeBalance(old, new big.Float) {
 		old1, new1, c.Abs(c.Sub(c, new1)))
 }
 func getBalance(conn *ethclient.Client, address common.Address) *big.Float {
-	balance, err := conn.BalanceAt(context.Background(), address, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	balance2 := new(big.Float)
-	balance2.SetString(balance.String())
-	Value := new(big.Float).Quo(balance2, big.NewFloat(math.Pow10(18)))
-	return Value
+	//balance, err := conn.BalanceAt(context.Background(), address, nil)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//balance2 := new(big.Float)
+	//balance2.SetString(balance.String())
+	//Value := new(big.Float).Quo(balance2, big.NewFloat(math.Pow10(18)))
+	return big.NewFloat(0)
 }
 func getRegisterBalance(conn *ethclient.Client, from common.Address) (uint64, uint64, uint64) {
 	header, err := conn.HeaderByNumber(context.Background(), nil)
@@ -339,10 +342,11 @@ func getRegisterBalance(conn *ethclient.Client, from common.Address) (uint64, ui
 	return 0, 0, 0
 }
 func dialEthConn() (*ethclient.Client, string) {
-	ip = EthRPCListenAddr //utils.RPCListenAddrFlag.Name)
-	port = EthRPCPortFlag //utils.RPCPortFlag.Name)
-	url := fmt.Sprintf("http://%s", fmt.Sprintf("%s:%d", ip, port))
-	conn, err := ethclient.Dial(url)
+	//ip = EthRPCListenAddr //utils.RPCListenAddrFlag.Name)
+	//port = EthRPCPortFlag //utils.RPCPortFlag.Name)
+	//url := fmt.Sprintf("http://%s", fmt.Sprintf("%s:%d", ip, port))
+	url := EthUrl
+	conn, err := ethclient.Dial(EthUrl)
 	if err != nil {
 		log.Fatalf("Failed to connect to the AtlasChain client: %v", err)
 	}
@@ -381,6 +385,9 @@ func convertChain(header *ethereum.Header, headerbyte *bytes.Buffer, e *types.He
 	header.MixDigest = e.MixDigest
 	header.Nonce = types.EncodeNonce(e.Nonce.Uint64())
 	header.Bloom.SetBytes(e.Bloom.Bytes())
+	if header.BaseFee = new(big.Int); e.BaseFee != nil {
+		header.BaseFee.Set(e.BaseFee)
+	}
 	if header.Difficulty = new(big.Int); e.Difficulty != nil {
 		header.Difficulty.Set(e.Difficulty)
 	}
@@ -420,9 +427,25 @@ func loadprivateCommon(keyfile string) (*ecdsa.PrivateKey, common.Address) {
 	return priKey1, crypto.PubkeyToAddress(priKey1.PublicKey)
 }
 
+//0xb2be7149dca8d266b0a6f76cc0308844865ffb4320419854720870074c8d1c90
 func getBase64(num int64) {
 	conn, _ := dialEthConn()
 	h, _ := conn.HeaderByNumber(context.Background(), big.NewInt(num))
-	encodedStr := hex.EncodeToString(h.Extra)
+	encodedStr := base64.StdEncoding.EncodeToString(h.Extra)
 	fmt.Println(encodedStr)
+}
+
+func getJson(num int64) {
+	conn, _ := dialEthConn()
+	h, _ := conn.HeaderByNumber(context.Background(), big.NewInt(num))
+	Header := &ethereum.Header{}
+	Buffer := &bytes.Buffer{}
+	h2, _ := convertChain(Header, Buffer, h)
+	bs, err := json.Marshal(h2)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(bs))
+	//encodedStr := base64.StdEncoding.EncodeToString(h.Extra)
+	//fmt.Println(encodedStr)
 }
